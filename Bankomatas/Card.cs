@@ -7,6 +7,6 @@
         public double Money { get; set; }
         public int CashOutSum { get; set; }
         public int CashOutAttemps { get; set; }
-
+        public List<double> Transactions { get; set; }
     }
 }

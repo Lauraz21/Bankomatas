@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 namespace Bankomatas
@@ -17,6 +18,17 @@ namespace Bankomatas
             Card currentUserCard = cards.Single(card => card.ID == usersCardGuid);
             Console.Clear();
 
+            bool loginSuccess = Login(currentUserCard);
+            if (!loginSuccess)
+            {
+                return;
+            }
+
+            ShowMenu(currentUserCard);
+            WriteToFile(cards);
+        }
+        public static bool Login(Card currentUserCard)
+        {
             bool isPinCorrect = false;
             int maxAttempts = 3;
 
@@ -38,11 +50,15 @@ namespace Bankomatas
                     if (maxAttempts == 0)
                     {
                         Console.WriteLine("Prisijungimo sesija baigesi.");
-                        return;
+                        return false;
                     }
                     Console.WriteLine($"Ivestas PIN kodas neteisingas. Jums liko {maxAttempts} bandymas.");
                 }
             }
+            return true;
+        }
+        public static void ShowMenu(Card currentUserCard)
+        {
             bool showMenu = true;
             while (showMenu)
             {
@@ -59,7 +75,8 @@ namespace Bankomatas
                         break;
 
                     case '2':
-                        Console.WriteLine($"Transakciju istorija: {GetTransactionHistory()}");
+                        GetTransactionHistory(currentUserCard);
+                        
                         break;
 
                     case '3':
@@ -74,15 +91,15 @@ namespace Bankomatas
                 Console.ReadKey();
                 Console.Clear();
             }
-            WriteToFile(cards);
         }
-
-
-        public static string GetTransactionHistory()
+        public static void GetTransactionHistory(Card currentUserCard)
         {
-            return "2023.10.05";
+            Console.WriteLine("Transakciju istorija: ");
+            foreach (double transaction in currentUserCard.Transactions.TakeLast(5))
+            {
+                Console.WriteLine(transaction);
+            }
         }
-
         public static void GetMoneyBalance(Card currentUserCard)
         {
             Console.WriteLine($"Iveskite pinigu suma: ");
@@ -95,6 +112,7 @@ namespace Bankomatas
                     currentUserCard.Money -= cashOut;
                     currentUserCard.CashOutSum += cashOut;
                     currentUserCard.CashOutAttemps++;
+                    currentUserCard.Transactions.Add(cashOut * -1);
                     Console.WriteLine($"Operacija ivykdyta sekmingai. Jusu pinigu likutis: {currentUserCard.Money} Eur.");
                 }
                 else
